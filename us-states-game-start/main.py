@@ -23,7 +23,6 @@ while len(guessed_state) < 50:
                 missing_state.append(state)
         new_data = pandas.DataFrame(missing_state)
         new_data.to_csv("states_to_learn.csv")
-
         break
     if answer_state in all_states and answer_state not in guessed_state:
         guessed_state.append(answer_state)
@@ -35,7 +34,8 @@ while len(guessed_state) < 50:
         t.write(answer_state)
         # t.write(state_data.state.item())
 
-
+# Also take a look at this to add more functionality to this
+# https://www.sporcle.com/games/g/states
 
 # get x and y coordinates on click in python tutle
 # https://stackoverflow.com/questions/42878641/get-mouse-click-coordinates-in-python-turtle
