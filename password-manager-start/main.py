@@ -3,6 +3,7 @@ from tkinter import messagebox
 from random import *
 import pyperclip
 import string
+import json
 
 WHITE = "#FFFFFF"
 
@@ -53,27 +54,66 @@ def generate_password():
     # password_entry.clipboard_clear()
     # password_entry.clipboard_append(password_entry.get())
 
+
 # ---------------------------- SAVE PASSWORD ------------------------------- #
+
 
 def save():
     website = website_entry.get()
     email = email_entry.get()
     password = password_entry.get()
+    new_data = {
+        website: {
+            "email": email,
+            "password": password,
+        }
+    }
 
     if len(website) == 0 or len(password) == 0:
         messagebox.showinfo(title="Oops", message="Please make sure you haven't left any field empty.")
     else:
-        is_ok = messagebox.askokcancel(title=website, message=f"These are the details entered: \n Email: {email}"
-                                                              f"\nPassword: {password} \n Is it ok to save.")
-        if is_ok:
-            with open("data.txt", "a") as data_file:
-                data_file.write(f"{website} | {email} | {password}\n")
+        try:
+            with open("data.json", "r") as data_file:
+                # Reading the old data
+                data = json.load(data_file)
+        except FileNotFoundError:
+            with open("data.json", "w") as data_file:
+                json.dump(new_data, data_file, indent=4)
+        else:
+            # Updating the old data with new data
+            data.update(new_data)
+            with open("data.json", "w") as data_file:
+                # Saving the updated data
+                json.dump(data, data_file, indent=4)
+
+                # data_file.write(f"{website} | {email} | {password}\n")
                 # print(f"{website} | {email} | {password}", file=data_file) This is just the another way to say .write
-                website_entry.delete(0, END)
-                password_entry.delete(0, END)
+        finally:
+            website_entry.delete(0, END)
+            password_entry.delete(0, END)
+
+
+# ---------------------------- FIND PASSWORD ------------------------------- #
+
+
+def find_password():
+    website = website_entry.get()
+    try:
+        with open("data.json") as data_file:
+            data = json.load(data_file)
+    except FileNotFoundError:
+        messagebox.showinfo(title="Error", message="No Data File Found.")
+    else:
+        if website in data:
+            email = data[website]["email"]
+            password = data[website]["password"]
+            messagebox.showinfo(title=website, message=f"Email: {email}\n Password: {password}")
+        else:
+            messagebox.showinfo(title="Error", message=f"No Details for {website} exists.")
 
 
 # ---------------------------- UI SETUP ------------------------------- #
+
 
 window = Tk()
 window.title("Password Manager")
@@ -95,21 +135,23 @@ password_label = Label(text="Password:", bg=WHITE, highlightthickness=0)
 password_label.grid(column=0, row=3)
 
 # Entries
-website_entry = Entry(width=35, bg=WHITE, highlightthickness=0)
-website_entry.grid(column=1, row=1, columnspan=2, sticky="EW")
+website_entry = Entry(width=21, bg=WHITE, highlightthickness=0)
+website_entry.grid(column=1, row=1, sticky="EW")
 website_entry.focus()
 
 email_entry = Entry(width=35, bg=WHITE, highlightthickness=0)
 email_entry.grid(column=1, row=2, columnspan=2, sticky="EW")
 email_entry.insert(0, "vaibhav@gmail.com")
 
-password_entry = Entry(width=21, bg=WHITE, highlightthickness=0)
-password_entry.grid(column=1, row=3, sticky="EW")
-
+password_entry = Entry(width=32, bg=WHITE, highlightthickness=0)
+password_entry.grid(column=1, row=3)
 
 # Buttons
+search_button = Button(text="Search", bg=WHITE, highlightthickness=0, command=find_password, width=13)
+search_button.grid(column=2, row=1)
+
 generate_password_button = Button(text="Generate Password", bg=WHITE, highlightthickness=0, command=generate_password)
-generate_password_button.grid(column=2, row=3, sticky="EW")
+generate_password_button.grid(column=2, row=3)
 
 add_button = Button(text="Add", width=36, bg=WHITE, highlightthickness=0, command=save)
 add_button.grid(column=1, row=4, columnspan=2, sticky="EW")
